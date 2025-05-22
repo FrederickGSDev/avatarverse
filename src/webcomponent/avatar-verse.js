@@ -25,9 +25,14 @@ export default class AvatarVerse extends HTMLElement {
     const size = parseInt(this.getAttribute('size') || '36', 10)
     const rounded = this.hasAttribute('rounded')
     const format = this.getAttribute('format') || 'svg'
-    const colorsAttr = this.getAttribute('colors') || ''
-    const colors = colorsAttr.split(',').map(c => c.trim()).filter(Boolean)
     const title = this.getAttribute('title') || ''
+
+    // Colores por defecto
+    const defaultColors = ['#0a0310', '#49007e', '#ff005b', '#ff7d10', '#ffb238']
+    const colorsAttr = this.getAttribute('colors')
+    const colors = colorsAttr && colorsAttr.trim() !== ''
+      ? colorsAttr.split(',').map(c => c.trim()).filter(Boolean)
+      : defaultColors
 
     // Limpiar contenido actual
     this.shadowRoot.innerHTML = ''
