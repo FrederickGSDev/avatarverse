@@ -29,11 +29,20 @@ export default class AvatarVerse extends HTMLElement {
     const colors = colorsAttr.split(',').map(c => c.trim()).filter(Boolean)
     const title = this.getAttribute('title') || ''
 
+    // Limpiar contenido actual
     this.shadowRoot.innerHTML = ''
 
     try {
       const avatar = generateAvatar({ name, colors, variant, rounded, size, format, title })
-      this.shadowRoot.appendChild(avatar)
+
+      if (format === 'svg' && typeof avatar === 'string') {
+        this.shadowRoot.innerHTML = avatar
+      } else if (format === 'image' && avatar instanceof window.Image) {
+        avatar.alt = title || name || 'Avatar'
+        this.shadowRoot.appendChild(avatar)
+      } else {
+        throw new Error('Formato no compatible o avatar inválido')
+      }
     } catch (err) {
       console.error('AvatarVerse error:', err)
       this.shadowRoot.innerHTML = '<span style="color:red;">⚠️ Error generating avatar</span>'

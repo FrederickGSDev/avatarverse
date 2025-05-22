@@ -24,7 +24,7 @@ const variants = {
  * @param {number} [options.size=36] - Tamaño del avatar en píxeles.
  * @param {'svg'|'image'} [options.format='svg'] - Formato de salida.
  * @param {string} [options.title] - Título accesible para el avatar SVG.
- * @returns {SVGElement|HTMLImageElement} SVG o IMG generado.
+ * @returns {string|HTMLImageElement} SVG como string o imagen en entorno navegador
  */
 export function generateAvatar ({
   name = 'John Doe',
@@ -40,28 +40,21 @@ export function generateAvatar ({
     throw new Error(`Variant "${variant}" is not supported.`)
   }
 
-  const svg = generator({ name, colors, rounded, size, title })
+  const svgString = generator({ name, colors, rounded, size, title })
 
   if (format === 'image') {
-    let svgString
-    if (typeof window !== 'undefined' && typeof window.XMLSerializer !== 'undefined') {
-      svgString = new window.XMLSerializer().serializeToString(svg)
-    } else {
-      // Para Node.js
-      const xmlserializer = require('xmlserializer')
-      svgString = xmlserializer.serializeToString(svg)
-    }
     const encoded = encodeURIComponent(svgString)
     if (typeof window !== 'undefined' && typeof window.Image !== 'undefined') {
       const img = new window.Image()
       img.src = `data:image/svg+xml,${encoded}`
       img.width = size
       img.height = size
+      img.alt = title
       return img
     } else {
-      throw new Error('Image constructor is not available in this environment.')
+      throw new Error('Image output only supported in browser environments.')
     }
   }
 
-  return svg
+  return svgString
 }

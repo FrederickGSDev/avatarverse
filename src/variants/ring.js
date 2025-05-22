@@ -5,7 +5,7 @@ const COLORS = 5
 
 function generateColors (colors, name) {
   const numFromName = hashCode(name)
-  const range = colors && colors.length
+  const range = colors?.length || 0
   const colorsShuffle = Array.from({ length: COLORS }, (_, i) =>
     getRandomColor(numFromName + i, colors, range)
   )
@@ -24,14 +24,14 @@ function generateColors (colors, name) {
 }
 
 /**
- * Crea un avatar tipo "Ring" como SVGElement
+ * Crea un avatar tipo "Ring" como string SVG
  * @param {Object} params
- * @param {string} params.name - Nombre para hash
- * @param {Array<string>} [params.colors] - Paleta de colores
- * @param {string} [params.title] - Título accesible para el avatar SVG (accesibilidad)
- * @param {boolean} [params.rounded=true] - Borde redondeado
- * @param {number} [params.size=90] - Tamaño en px
- * @returns {SVGElement}
+ * @param {string} params.name
+ * @param {Array<string>} [params.colors]
+ * @param {string} [params.title]
+ * @param {boolean} [params.rounded=true]
+ * @param {number} [params.size=90]
+ * @returns {string} SVG en string
  */
 export default function createAvatarRing ({
   name,
@@ -40,46 +40,8 @@ export default function createAvatarRing ({
   rounded = true,
   size = SIZE
 }) {
-  const svgNS = 'http://www.w3.org/2000/svg'
   const ringColors = generateColors(colors, name)
   const maskId = `mask-${Math.random().toString(36).slice(2)}`
-
-  const svg = document.createElementNS(svgNS, 'svg')
-  svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`)
-  svg.setAttribute('width', size)
-  svg.setAttribute('height', size)
-  svg.setAttribute('fill', 'none')
-  svg.setAttribute('role', 'img')
-  svg.setAttribute('xmlns', svgNS)
-
-  // Soporte para título accesible
-  if (title && typeof title === 'string') {
-    const titleEl = document.createElementNS(svgNS, 'title')
-    titleEl.textContent = title
-    svg.appendChild(titleEl)
-  }
-
-  const defs = document.createElementNS(svgNS, 'defs')
-  const mask = document.createElementNS(svgNS, 'mask')
-  mask.setAttribute('id', maskId)
-  mask.setAttribute('maskUnits', 'userSpaceOnUse')
-  mask.setAttribute('x', 0)
-  mask.setAttribute('y', 0)
-  mask.setAttribute('width', SIZE)
-  mask.setAttribute('height', SIZE)
-
-  const rect = document.createElementNS(svgNS, 'rect')
-  rect.setAttribute('width', SIZE)
-  rect.setAttribute('height', SIZE)
-  rect.setAttribute('fill', '#FFFFFF')
-  rect.setAttribute('rx', rounded ? SIZE * 2 : 0)
-
-  mask.appendChild(rect)
-  defs.appendChild(mask)
-  svg.appendChild(defs)
-
-  const g = document.createElementNS(svgNS, 'g')
-  g.setAttribute('mask', `url(#${maskId})`)
 
   const paths = [
     ['M0 0h90v45H0z', ringColors[0]],
@@ -92,20 +54,25 @@ export default function createAvatarRing ({
     ['M71 45a26 26 0 01-52 0h52z', ringColors[7]]
   ]
 
-  for (const [d, fill] of paths) {
-    const path = document.createElementNS(svgNS, 'path')
-    path.setAttribute('d', d)
-    path.setAttribute('fill', fill)
-    g.appendChild(path)
-  }
-
-  const circle = document.createElementNS(svgNS, 'circle')
-  circle.setAttribute('cx', 45)
-  circle.setAttribute('cy', 45)
-  circle.setAttribute('r', 23)
-  circle.setAttribute('fill', ringColors[8])
-  g.appendChild(circle)
-
-  svg.appendChild(g)
-  return svg
+  return `
+<svg
+  viewBox="0 0 ${SIZE} ${SIZE}"
+  width="${size}"
+  height="${size}"
+  fill="none"
+  role="img"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  ${title ? `<title>${title}</title>` : ''}
+  <defs>
+    <mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${SIZE}" height="${SIZE}">
+      <rect width="${SIZE}" height="${SIZE}" fill="#FFFFFF" rx="${rounded ? SIZE * 2 : 0}" />
+    </mask>
+  </defs>
+  <g mask="url(#${maskId})">
+    ${paths.map(([d, fill]) => `<path d="${d}" fill="${fill}" />`).join('')}
+    <circle cx="45" cy="45" r="23" fill="${ringColors[8]}" />
+  </g>
+</svg>
+  `.trim()
 }
