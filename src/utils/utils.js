@@ -1,63 +1,66 @@
 /**
- * Genera un hash numérico a partir de una cadena.
- * Es usado para producir datos deterministas a partir del nombre.
+ * Genera un hash numérico positivo a partir de una cadena.
+ * Usado para derivar una semilla determinista del nombre.
  */
 export function hashCode (str) {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
-    // Algoritmo simple de dispersión basado en código ASCII
-    hash = (hash << 5) - hash + str.charCodeAt(i)
-    hash |= 0 // Convierte a entero de 32 bits
+    const character = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + character
+    hash = hash & hash // Fuerza a número de 32 bits
   }
   return Math.abs(hash)
 }
 
 /**
- * Retorna un número dentro de un rango, derivado del hash.
- * Permite obtener valores pseudoaleatorios consistentes.
+ * Retorna el dígito en la posición indicada de un número.
+ * Permite derivar variabilidad a partir de partes del hash.
  */
-export function getUnit (seed, range, index = 0) {
-  const str = seed.toString()
-  const charCode = str.charCodeAt(index % str.length)
-  return charCode % range
+export function getDigit (number, index) {
+  return Math.floor((number / Math.pow(10, index)) % 10)
 }
 
 /**
- * Devuelve true o false de forma pseudoaleatoria y consistente.
+ * Deriva un booleano determinista usando un dígito del número.
  */
-export function getBoolean (seed, index = 0) {
-  return getUnit(seed, 2, index) === 0
+export function getBoolean (number, index = 0) {
+  return getDigit(number, index) % 2 === 0
 }
 
 /**
- * Selecciona un color de una paleta de forma pseudoaleatoria.
- * Si no se proporciona una paleta, usa un fallback.
+ * Retorna un número dentro de un rango, con posible signo negativo
+ * dependiendo del índice, para mayor variabilidad.
  */
-export function getRandomColor (seed, colors = null, range = null) {
-  if (colors && colors.length > 0) {
-    return colors[seed % colors.length]
-  }
-
-  // Paleta de respaldo
-  const fallbackColors = ['#01888C', '#FC7500', '#034F5D', '#F73F01', '#FC1960', '#C7144C', '#F3C100', '#1598F2', '#2465E1', '#F19E02']
-  return fallbackColors[seed % fallbackColors.length]
+export function getUnit (number, range, index = 0) {
+  const base = number % range
+  const isNegative = index && getDigit(number, index) % 2 === 0
+  return isNegative ? -base : base
 }
 
 /**
- * Retorna un color (negro o blanco) para garantizar contraste legible
- * sobre un fondo dado (color hex).
+ * Selecciona un color pseudoaleatorio de una paleta, de forma determinista.
+ * El `range` debe coincidir con `colors.length`.
+ */
+export function getRandomColor (number, colors = [], range = colors.length) {
+  return colors[number % range]
+}
+
+/**
+ * Calcula un color de alto contraste (blanco o negro) para el texto
+ * que se superpone a un fondo dado (en formato hexadecimal).
  */
 export function getContrast (hexColor) {
-  // Elimina el "#" si existe
-  const hex = hexColor.replace('#', '')
+  // Elimina el "#" si está presente
+  const hex = hexColor.startsWith('#') ? hexColor.slice(1) : hexColor
 
-  // Convierte hex a componentes RGB
-  const r = parseInt(hex.substring(0, 2), 16)
-  const g = parseInt(hex.substring(2, 4), 16)
-  const b = parseInt(hex.substring(4, 6), 16)
+  // Convierte a componentes RGB
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
 
-  // Cálculo de luminancia relativa según WCAG
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  // Cálculo de luminancia perceptual (YIQ)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000
 
-  return luminance > 0.5 ? '#000000' : '#FFFFFF'
+  // Devuelve negro o blanco según contraste mínimo
+  return yiq >= 128 ? '#000000' : '#FFFFFF'
 }
