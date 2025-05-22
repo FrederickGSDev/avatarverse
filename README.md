@@ -28,7 +28,7 @@ document.body.appendChild(avatar);
 ### 🌐 Web Component (HTML)
 
 ```html
-<script src="node_modules/avatarverse/dist/avatarverse-webcomponent.js" type="module"></script>
+<script src="https://cdn.jsdelivr.net/npm/avatarverse/dist/avatarverse-webcomponent.js"></script>
 
 <avatar-verse
   name="John Doe"
